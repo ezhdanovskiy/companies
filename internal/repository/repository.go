@@ -3,6 +3,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 
 	"github.com/ezhdanovskiy/companies/internal/models"
@@ -50,6 +51,7 @@ func NewRepo(logger *zap.SugaredLogger, db *sqlx.DB) (*Repo, error) {
 	}, nil
 }
 
+// CreateCompany insert a company.
 func (r *Repo) CreateCompany(ctx context.Context, c *models.Company) error {
 	r.log.With("id", c.ID, "name", c.Name, "descr", c.Description, "amount", c.EmployeesAmount,
 		"registered", c.Registered, "type", c.Type).Debug("Repo.CreateCompany")
@@ -65,4 +67,25 @@ VALUES ($1, $2, $3, $4, $5, $6)
 	}
 
 	return nil
+}
+
+// GetCompany selects company by uuid.
+func (r *Repo) GetCompany(ctx context.Context, uuid string) (*models.Company, error) {
+	r.log.With("uuid", uuid).Debug("Repo.GetCompany")
+	const query = `
+SELECT * 
+FROM companies 
+WHERE id = $1 
+`
+
+	var company Company
+	err := r.db.GetContext(ctx, &company, query, uuid)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("select: %w", err)
+	}
+
+	return company.toDomain(), nil
 }

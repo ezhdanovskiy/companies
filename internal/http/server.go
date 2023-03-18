@@ -29,7 +29,7 @@ func NewServer(logger *zap.SugaredLogger, httpPort int, svc Service) *Server {
 func (s *Server) Run() error {
 	router := gin.Default()
 	apiV1 := router.Group("/api/v1")
-	apiV1.GET("/companies", s.GetCompany)
+	apiV1.GET("/companies/:uuid", s.GetCompany)
 	//apiV1.Use(middlewares.Auth()).
 	apiV1.POST("/companies", s.CreateCompany)
 	//{

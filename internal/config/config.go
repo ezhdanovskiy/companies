@@ -29,8 +29,8 @@ func NewConfig() (*Config, error) {
 	viper.SetConfigFile(".env")
 	viper.AutomaticEnv()
 
-	viper.SetDefault("log_level", "info")
-	viper.SetDefault("log_encoding", "json")
+	viper.SetDefault("log_level", "debug")
+	viper.SetDefault("log_encoding", "console")
 	viper.SetDefault("http_port", 8080)
 
 	viper.SetDefault("db_host", "localhost")

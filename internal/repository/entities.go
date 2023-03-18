@@ -2,20 +2,28 @@ package repository
 
 import (
 	"time"
+
+	"github.com/ezhdanovskiy/companies/internal/models"
 )
 
-type Wallet struct {
-	Name      string    `db:"name"`
-	Balance   uint64    `db:"balance"`
-	CreatedAt time.Time `db:"created_at"`
-	UpdatedAt time.Time `db:"updated_at"`
+type Company struct {
+	ID              string     `db:"id"`
+	Name            string     `db:"name"`
+	Description     string     `db:"description"`
+	EmployeesAmount int        `db:"employees_amount"`
+	Registered      bool       `db:"registered"`
+	Type            string     `db:"type"` // Corporations | NonProfit | Cooperative | Sole Proprietorship
+	CreatedAt       time.Time  `db:"created_at"`
+	UpdatedAt       *time.Time `db:"updated_at"`
 }
 
-type Operation struct {
-	ID          int64     `db:"id"`
-	Wallet      string    `db:"wallet"`
-	Type        string    `db:"type"`
-	Amount      uint64    `db:"amount"`
-	OtherWallet string    `db:"other_wallet"`
-	CreatedAt   time.Time `db:"created_at"`
+func (c *Company) toDomain() *models.Company {
+	return &models.Company{
+		ID:              c.ID,
+		Name:            c.Name,
+		Description:     c.Description,
+		EmployeesAmount: c.EmployeesAmount,
+		Registered:      c.Registered,
+		Type:            c.Type,
+	}
 }

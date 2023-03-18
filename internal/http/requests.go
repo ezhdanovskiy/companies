@@ -2,7 +2,7 @@ package http
 
 import "github.com/ezhdanovskiy/companies/internal/models"
 
-type Company struct {
+type CreateCompany struct {
 	ID              string `json:"id" binding:"required,uuid"`
 	Name            string `json:"name" binding:"required,max=3000"`
 	Description     string `json:"description" binding:"omitempty,max=3000"`
@@ -11,7 +11,7 @@ type Company struct {
 	Type            string `json:"type" binding:"required,oneof=Corporations NonProfit Cooperative 'Sole Proprietorship'"` // Corporations | NonProfit | Cooperative | Sole Proprietorship
 }
 
-func (c *Company) toDomain() *models.Company {
+func (c *CreateCompany) toDomain() *models.Company {
 	return &models.Company{
 		ID:              c.ID,
 		Name:            c.Name,
