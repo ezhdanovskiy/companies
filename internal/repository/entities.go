@@ -4,17 +4,20 @@ import (
 	"time"
 
 	"github.com/ezhdanovskiy/companies/internal/models"
+	"github.com/uptrace/bun"
 )
 
 type Company struct {
-	ID              string     `db:"id"`
-	Name            string     `db:"name"`
-	Description     string     `db:"description"`
-	EmployeesAmount int        `db:"employees_amount"`
-	Registered      bool       `db:"registered"`
-	Type            string     `db:"type"` // Corporations | NonProfit | Cooperative | Sole Proprietorship
-	CreatedAt       time.Time  `db:"created_at"`
-	UpdatedAt       *time.Time `db:"updated_at"`
+	bun.BaseModel `bun:"table:companies,alias:c"`
+
+	ID              string     `bun:"id,pk"`
+	Name            string     `bun:"name"`
+	Description     string     `bun:"description"`
+	EmployeesAmount int        `bun:"employees_amount"`
+	Registered      bool       `bun:"registered"`
+	Type            string     `bun:"type"` // Corporations | NonProfit | Cooperative | Sole Proprietorship
+	CreatedAt       time.Time  `bun:"created_at,nullzero,notnull,default:current_timestamp"`
+	UpdatedAt       *time.Time `bun:"updated_at"`
 }
 
 func (c *Company) toDomain() *models.Company {

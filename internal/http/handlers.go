@@ -1,10 +1,12 @@
 package http
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 
 	"github.com/ezhdanovskiy/companies/internal/http/requests"
+	"github.com/ezhdanovskiy/companies/internal/models"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -52,6 +54,13 @@ func (s *Server) UpdateCompany(c *gin.Context) {
 
 	err := s.svc.UpdateCompany(c.Request.Context(), req.ToDomain(uid))
 	if err != nil {
+		if errors.Is(err, models.ErrCompanyNotFound) {
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
+				"message": "Company not found",
+			})
+			return
+		}
+
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"message": err.Error(),
 		})
@@ -74,6 +83,13 @@ func (s *Server) DeleteCompany(c *gin.Context) {
 
 	err := s.svc.DeleteCompany(c.Request.Context(), uid)
 	if err != nil {
+		if errors.Is(err, models.ErrCompanyNotFound) {
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
+				"message": "Company not found",
+			})
+			return
+		}
+
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"message": err.Error(),
 		})

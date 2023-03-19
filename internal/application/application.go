@@ -2,9 +2,13 @@
 package application
 
 import (
+	"database/sql"
 	"fmt"
 
-	"github.com/jmoiron/sqlx"
+	"github.com/uptrace/bun"
+	"github.com/uptrace/bun/dialect/pgdialect"
+	"github.com/uptrace/bun/driver/pgdriver"
+	"github.com/uptrace/bun/extra/bundebug"
 	"go.uber.org/zap"
 
 	"github.com/ezhdanovskiy/companies/internal/config"
@@ -45,12 +49,16 @@ func NewApplication() (*Application, error) {
 func (a *Application) Run() error {
 	a.log.Info("Run application")
 
-	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		a.cfg.DB.Host, a.cfg.DB.Port, a.cfg.DB.User, a.cfg.DB.Password, a.cfg.DB.DBName)
+	dsn := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable",
+		a.cfg.DB.User, a.cfg.DB.Password, a.cfg.DB.Host, a.cfg.DB.Port, a.cfg.DB.DBName)
+	pgdb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
+	db := bun.NewDB(pgdb, pgdialect.New())
 
-	db, err := sqlx.Connect("postgres", dsn)
-	if err != nil {
-		return fmt.Errorf("connect database: %w", err)
+	// Print all queries to stdout.
+	db.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(true)))
+
+	if err := db.Ping(); err != nil {
+		return fmt.Errorf("db pinf: %w", err)
 	}
 
 	if err := repository.MigrateUp(a.log, db.DB, "file://"+a.cfg.DB.MigrationsPath); err != nil {

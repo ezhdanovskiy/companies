@@ -5,21 +5,21 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"strings"
+	"time"
 
 	"github.com/ezhdanovskiy/companies/internal/models"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+	"github.com/uptrace/bun"
 	"go.uber.org/zap"
 )
 
 // Repo performs database operations.
 type Repo struct {
 	log *zap.SugaredLogger
-	db  *sqlx.DB
+	db  *bun.DB
 }
 
 // MigrateUp applies migrations to DB.
@@ -45,7 +45,7 @@ func MigrateUp(logger *zap.SugaredLogger, db *sql.DB, path string) error {
 }
 
 // NewRepo creates instance of repository using existing DB.
-func NewRepo(logger *zap.SugaredLogger, db *sqlx.DB) (*Repo, error) {
+func NewRepo(logger *zap.SugaredLogger, db *bun.DB) (*Repo, error) {
 	return &Repo{
 		log: logger,
 		db:  db,
@@ -57,76 +57,87 @@ func (r *Repo) CreateCompany(ctx context.Context, c *models.Company) error {
 	r.log.With("id", c.ID, "name", c.Name, "descr", c.Description, "amount", c.EmployeesAmount,
 		"registered", c.Registered, "type", c.Type).Debug("Repo.CreateCompany")
 
-	const query = `
-INSERT INTO companies (id, name, description, employees_amount, registered, type)
-VALUES (:id, :name, :description, :employees_amount, :registered, :type)
-`
-	_, err := r.db.NamedExecContext(ctx, query, newCompany(c))
+	_, err := r.db.NewInsert().Model(newCompany(c)).Exec(ctx)
 	if err != nil {
-		return fmt.Errorf("insert company: %w", err)
+		return err
 	}
 
 	return nil
 }
 
 // UpdateCompany insert a company.
-func (r *Repo) UpdateCompany(ctx context.Context, c *models.CompanyPatch) error {
+func (r *Repo) UpdateCompany(ctx context.Context, c *models.CompanyPatch) (affected int64, err error) {
 	r.log.With("id", c.ID, "name", c.Name, "descr", c.Description, "amount", c.EmployeesAmount,
 		"registered", c.Registered, "type", c.Type).Debug("Repo.CreateCompany")
 
-	args := []any{c.ID}
-	var setStr string
-	if c.Name != nil {
-		args = append(args, *c.Name)
-		setStr += fmt.Sprintf("%s = $%v, ", "name", len(args)+1)
+	t := time.Now()
+	company := &Company{
+		ID:        c.ID,
+		UpdatedAt: &t,
+	}
+	fields := []string{"updated_at"}
+
+	if c.Name != nil && *c.Name != "" {
+		company.Name = *c.Name
+		fields = append(fields, "name")
 	}
 
-	setStr = strings.TrimSuffix(setStr, ", ")
+	if c.Description != nil {
+		company.Description = *c.Description
+		fields = append(fields, "description")
+	}
 
-	const query = `
-UPDATE companies 
-SET %s
-WHERE id = $1
-`
+	if c.EmployeesAmount != nil {
+		company.EmployeesAmount = *c.EmployeesAmount
+		fields = append(fields, "employees_amount")
+	}
 
-	s := fmt.Sprintf(query, setStr)
-	_, err := r.db.ExecContext(ctx, s, args...)
+	if c.Registered != nil {
+		company.Registered = *c.Registered
+		fields = append(fields, "registered")
+	}
+
+	if c.Type != nil {
+		company.Type = *c.Type
+		fields = append(fields, "type")
+	}
+
+	res, err := r.db.NewUpdate().Model(company).Column(fields...).WherePK().Exec(ctx)
 	if err != nil {
-		r.log.Error(err)
-		return fmt.Errorf("update company: %w", err)
+		return 0, fmt.Errorf("update company: %w", err)
 	}
 
-	return nil
+	affected, err = res.RowsAffected()
+	if err != nil {
+		return 0, fmt.Errorf("delete company rows affected: %w", err)
+	}
+
+	return affected, nil
 }
 
 // DeleteCompany deletes a company.
-func (r *Repo) DeleteCompany(ctx context.Context, uuid string) error {
+func (r *Repo) DeleteCompany(ctx context.Context, uuid string) (affected int64, err error) {
 	r.log.With("uuid", uuid).Debug("Repo.DeleteCompany")
 
-	const query = `
-DELETE FROM companies
-WHERE id = $1
-`
-
-	_, err := r.db.ExecContext(ctx, query, uuid)
+	res, err := r.db.NewDelete().Model(&Company{ID: uuid}).WherePK().Exec(ctx)
 	if err != nil {
-		return fmt.Errorf("delete company: %w", err)
+		return 0, fmt.Errorf("delete company: %w", err)
 	}
 
-	return nil
+	affected, err = res.RowsAffected()
+	if err != nil {
+		return 0, fmt.Errorf("delete company rows affected: %w", err)
+	}
+
+	return affected, nil
 }
 
 // GetCompany selects company by uuid.
 func (r *Repo) GetCompany(ctx context.Context, uuid string) (*models.Company, error) {
 	r.log.With("uuid", uuid).Debug("Repo.GetCompany")
-	const query = `
-SELECT * 
-FROM companies 
-WHERE id = $1 
-`
 
-	var company Company
-	err := r.db.GetContext(ctx, &company, query, uuid)
+	company := new(Company)
+	err := r.db.NewSelect().Model(company).Where("id = ?", uuid).Scan(ctx)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil

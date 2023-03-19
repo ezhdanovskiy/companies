@@ -26,12 +26,26 @@ func (s *Service) CreateCompany(ctx context.Context, company *models.Company) er
 
 func (s *Service) UpdateCompany(ctx context.Context, companyPatch *models.CompanyPatch) error {
 	s.log.With("id", companyPatch.ID).Debug("Service.UpdateCompany")
-	return s.repo.UpdateCompany(ctx, companyPatch)
+	affected, err := s.repo.UpdateCompany(ctx, companyPatch)
+	if err != nil {
+		return err
+	}
+	if affected == 0 {
+		return models.ErrCompanyNotFound
+	}
+	return nil
 }
 
 func (s *Service) DeleteCompany(ctx context.Context, uuid string) error {
 	s.log.With("uuid", uuid).Debug("Service.DeleteCompany")
-	return s.repo.DeleteCompany(ctx, uuid)
+	affected, err := s.repo.DeleteCompany(ctx, uuid)
+	if err != nil {
+		return err
+	}
+	if affected == 0 {
+		return models.ErrCompanyNotFound
+	}
+	return nil
 }
 
 func (s *Service) GetCompany(ctx context.Context, uuid string) (*models.Company, error) {
