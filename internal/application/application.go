@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/ezhdanovskiy/companies/internal/kafka"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/driver/pgdriver"
@@ -70,7 +71,14 @@ func (a *Application) Run() error {
 		return fmt.Errorf("new repo: %w", err)
 	}
 
-	a.svc = service.NewService(a.log, repo)
+	producer := kafka.NewAsyncProducer(&kafka.ProducerConfig{
+		Brokers:      []string{a.cfg.Kafka.Addr},
+		Topic:        a.cfg.Kafka.Topic,
+		BatchSize:    a.cfg.Kafka.BatchSize,
+		BatchTimeout: a.cfg.Kafka.BatchTimeout,
+	})
+
+	a.svc = service.NewService(a.log, repo, producer)
 
 	a.httpServer = http.NewServer(a.log, a.cfg.HttpPort, a.svc)
 

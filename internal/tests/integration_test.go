@@ -11,9 +11,11 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	httpserver "github.com/ezhdanovskiy/companies/internal/http"
 	"github.com/ezhdanovskiy/companies/internal/http/requests"
+	"github.com/ezhdanovskiy/companies/internal/kafka"
 	"github.com/ezhdanovskiy/companies/internal/repository"
 	"github.com/ezhdanovskiy/companies/internal/service"
 	"github.com/gin-gonic/gin"
@@ -99,9 +101,15 @@ func newTestService(t *testing.T) TestServer {
 	repo, err := repository.NewRepo(log, db)
 	require.NoError(t, err)
 
-	svc := service.NewService(log, repo)
+	producer := kafka.NewAsyncProducer(&kafka.ProducerConfig{
+		Brokers:      []string{"127.0.0.1:9092"},
+		Topic:        "quickstart-events",
+		BatchSize:    3,
+		BatchTimeout: time.Second * 10,
+	})
+
+	svc := service.NewService(log, repo, producer)
 	srv := httpserver.NewServer(log, 0, svc)
-	//router := gin.Default()
 	router := gin.New()
 
 	srv.SetAPIV1Routes(router.Group("/"))
@@ -111,7 +119,7 @@ func newTestService(t *testing.T) TestServer {
 		log:    log,
 		db:     db,
 		repo:   repo,
-		svc:    service.NewService(log, repo),
+		svc:    svc,
 		router: router,
 	}
 

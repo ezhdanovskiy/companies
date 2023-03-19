@@ -14,4 +14,9 @@ type Repository interface {
 	GetCompany(ctx context.Context, companyUUID string) (*models.Company, error)
 }
 
+type Producer interface {
+	Publish(ctx context.Context, messages ...[]byte) error
+}
+
 //go:generate mockgen -destination=./mocks/repository_mock.go -package=mocks . Repository
+//go:generate mockgen -destination=./mocks/producer_mock.go -package=mocks . Producer

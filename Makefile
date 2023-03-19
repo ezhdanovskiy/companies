@@ -28,7 +28,7 @@ build:
 	CGO_ENABLED=0 go build -o $(BINARY_NAME) -v $(SRC)
 
 run:
-	$(info ************ CLEAN ************)
+	$(info ************ RUN ************)
 	$(BINARY_NAME)
 
 clean:
@@ -54,11 +54,24 @@ migrate/down:
 	$(info ************ MIGRATE DOWN ************)
 	migrate -path migrations -database "postgresql://postgres:postgres@localhost:5432/postgres?sslmode=disable" -verbose down 1
 
-postgres/up:
+up:
+	$(info ************ DOCKER-COMPOSE UP ************)
+	docker-compose up -d
+up/postgres:
 	$(info ************ UP POSTGRES IN DOCKER-COMPOSE ************)
 	docker-compose up -d postgres
-postgres/down:
-	$(info ************ DOWN DOCKER-COMPOSE ************)
-	docker-compose down --remove-orphans
+down:
+	$(info ************ DOCKER-COMPOSE DOWN ************)
+	docker-compose down
 
-test/int/docker-compose: postgres/up test/int postgres/down
+kafka/topic/create:
+	$(info ************ Kafka topic create ************)
+	docker exec -it companies-kafka-1 /usr/bin/kafka-topics --create --topic companies-mutations --partitions 1 --replication-factor 1 --bootstrap-server localhost:9092
+kafka/topic/describe:
+	$(info ************ Kafka topic describe ************)
+	docker exec -it companies-kafka-1 /usr/bin/kafka-topics --describe --topic companies-mutations --bootstrap-server localhost:9092
+kafka/topic/consume:
+	$(info ************ Kafka console consumer ************)
+	docker exec -it companies-kafka-1 /usr/bin/kafka-console-consumer --topic companies-mutations --from-beginning --bootstrap-server localhost:9092
+
+test/int/docker-compose: up kafka/topic/create test/int down

@@ -2,6 +2,8 @@
 package config
 
 import (
+	"time"
+
 	"github.com/spf13/viper"
 )
 
@@ -11,6 +13,7 @@ type Config struct {
 	LogEncoding string `mapstructure:"log_encoding"` // json/console
 	HttpPort    int    `mapstructure:"http_port"`
 	DB          DB
+	Kafka       Kafka
 }
 
 // DB contains parameter for configuring repository.
@@ -21,6 +24,14 @@ type DB struct {
 	Password       string `mapstructure:"db_password"`
 	DBName         string `mapstructure:"db_name"`
 	MigrationsPath string `mapstructure:"migrations_path"`
+}
+
+// Kafka contains parameter for configuring kafka.
+type Kafka struct {
+	Addr         string        `mapstructure:"kafka_addr"`
+	Topic        string        `mapstructure:"kafka_topic"`
+	BatchSize    int           `mapstructure:"kafka_batch_size"`
+	BatchTimeout time.Duration `mapstructure:"kafka_batch_timeout"`
 }
 
 // NewConfig creates a new Config instance with parameters parsed by viber.
@@ -40,6 +51,11 @@ func NewConfig() (*Config, error) {
 	viper.SetDefault("db_name", "postgres")
 	viper.SetDefault("migrations_path", "migrations")
 
+	viper.SetDefault("kafka_addr", "127.0.0.1:9092")
+	viper.SetDefault("kafka_topic", "companies-mutations")
+	viper.SetDefault("kafka_batch_size", 3)
+	viper.SetDefault("kafka_batch_timeout", "10s")
+
 	_ = viper.ReadInConfig()
 
 	if err := viper.Unmarshal(config); err != nil {
@@ -47,6 +63,10 @@ func NewConfig() (*Config, error) {
 	}
 
 	if err := viper.Unmarshal(&config.DB); err != nil {
+		return nil, err
+	}
+
+	if err := viper.Unmarshal(&config.Kafka); err != nil {
 		return nil, err
 	}
 

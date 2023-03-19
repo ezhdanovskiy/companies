@@ -26,6 +26,9 @@ func TestNewService_CreateCompany(t *testing.T) {
 	ts.mockRepo.EXPECT().CreateCompany(ctx, company).
 		Return(nil)
 
+	ts.mockProducer.EXPECT().Publish(ctx, gomock.Any()).
+		Return(nil)
+
 	err := ts.svc.CreateCompany(ctx, company)
 	require.NoError(t, err)
 }
@@ -54,6 +57,9 @@ func TestNewService_UpdateCompany(t *testing.T) {
 
 	ts.mockRepo.EXPECT().UpdateCompany(ctx, company).
 		Return(affected, nil)
+
+	ts.mockProducer.EXPECT().Publish(ctx, gomock.Any()).
+		Return(nil)
 
 	err := ts.svc.UpdateCompany(ctx, company)
 	require.NoError(t, err)
@@ -94,20 +100,22 @@ func TestNewService_UpdateCompany_NotFound(t *testing.T) {
 
 // TestService ---------------------------------------------------------------------------------------------------------
 type TestService struct {
-	t        *testing.T
-	log      *zap.SugaredLogger
-	mockCtrl *gomock.Controller
-	mockRepo *mocks.MockRepository
-	svc      *Service
+	t            *testing.T
+	log          *zap.SugaredLogger
+	mockCtrl     *gomock.Controller
+	mockRepo     *mocks.MockRepository
+	mockProducer *mocks.MockProducer
+	svc          *Service
 }
 
 func newTestService(t *testing.T) TestService {
 	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	ts := TestService{
-		t:        t,
-		mockCtrl: mockCtrl,
-		mockRepo: mocks.NewMockRepository(mockCtrl),
+		t:            t,
+		mockCtrl:     mockCtrl,
+		mockRepo:     mocks.NewMockRepository(mockCtrl),
+		mockProducer: mocks.NewMockProducer(mockCtrl),
 	}
 
 	if logsEnabled {
@@ -117,7 +125,7 @@ func newTestService(t *testing.T) TestService {
 		ts.log = zap.NewNop().Sugar()
 	}
 
-	ts.svc = NewService(ts.log, ts.mockRepo)
+	ts.svc = NewService(ts.log, ts.mockRepo, ts.mockProducer)
 
 	return ts
 }
