@@ -1,6 +1,6 @@
 APP_NAME=companies
 CUR_DIR=$(shell pwd)
-SRC=$(CUR_DIR)/cmd
+SRC=$(CUR_DIR)/cmd/companies
 BINARY_NAME=$(CUR_DIR)/bin/$(APP_NAME)
 
 .PHONY: generate fmt test test/int build run clean mod/tidy build-container run-container
@@ -30,6 +30,10 @@ build:
 run:
 	$(info ************ RUN ************)
 	$(BINARY_NAME)
+
+lint:
+	$(info ************ Linter ************)
+	golangci-lint run ./... -v
 
 clean:
 	$(info ************ CLEAN ************)
@@ -75,3 +79,42 @@ kafka/topic/consume:
 	docker exec -it companies-kafka-1 /usr/bin/kafka-console-consumer --topic companies-mutations --from-beginning --bootstrap-server localhost:9092
 
 test/int/docker-compose: up kafka/topic/create test/int down
+
+run/local: up kafka/topic/create build run
+
+company/create:
+	$(info ************ Create company ************)
+	curl --location 'http://localhost:8080/api/v1/secured/companies' \
+    --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InVrZXNoLm11cnVnYW4iLCJlbWFpbCI6InVrZXNoQGdvLmNvbSIsImV4cCI6MTcxMzM4NzYwMH0.Dbcz0odhXAbdjM5HprynZ4eSv-OCBZqhymCZOC-MKiM' \
+    --header 'Content-Type: application/json' \
+    --data '{ \
+        "id": "abc8c242-00ed-40a6-82df-ea0d3afd0867", \
+        "name": "XM67", \
+        "employees_amount": 123, \
+        "registered": true, \
+        "type": "Corporations" \
+    }' -w "\n\n"
+
+company/patch:
+	$(info ************ Patch company ************)
+	curl --location --request PATCH 'http://localhost:8080/api/v1/secured/companies/abc8c242-00ed-40a6-82df-ea0d3afd0867' \
+    --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InVrZXNoLm11cnVnYW4iLCJlbWFpbCI6InVrZXNoQGdvLmNvbSIsImV4cCI6MTcxMzM4NzYwMH0.Dbcz0odhXAbdjM5HprynZ4eSv-OCBZqhymCZOC-MKiM' \
+    --header 'Content-Type: application/json' \
+    --data '{ \
+        "name": "XM67", \
+        "description": "description67", \
+        "employees_amount": 66, \
+        "registered": false, \
+        "type": "Sole Proprietorship" \
+    }' -w "\n\n"
+
+company/delete:
+	$(info ************ Delete company ************)
+	curl --location --request DELETE 'http://localhost:8080/api/v1/secured/companies/abc8c242-00ed-40a6-82df-ea0d3afd0867' \
+    --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InVrZXNoLm11cnVnYW4iLCJlbWFpbCI6InVrZXNoQGdvLmNvbSIsImV4cCI6MTcxMzM4NzYwMH0.Dbcz0odhXAbdjM5HprynZ4eSv-OCBZqhymCZOC-MKiM'  -w "\n\n"
+
+company/get:
+	$(info ************ Get company ************)
+	curl --location 'http://localhost:8080/api/v1/companies/abc8c242-00ed-40a6-82df-ea0d3afd0867' -w "\n\n"
+
+company/livecycle: company/create company/get company/patch company/get company/delete

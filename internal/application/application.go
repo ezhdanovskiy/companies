@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/ezhdanovskiy/companies/internal/auth"
 	"github.com/ezhdanovskiy/companies/internal/kafka"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
@@ -80,9 +81,10 @@ func (a *Application) Run() error {
 
 	a.svc = service.NewService(a.log, repo, producer)
 
-	a.httpServer = http.NewServer(a.log, a.cfg.HttpPort, a.svc)
+	auth.SetJWTKey(a.cfg.JWTKey)
+	a.httpServer = http.NewServer(a.log, a.cfg.HTTPPort, a.svc)
 
-	a.log.Infof("Run HTTP server on port %v", a.cfg.HttpPort)
+	a.log.Infof("Run HTTP server on port %v", a.cfg.HTTPPort)
 
 	if err := a.httpServer.Run(); err != nil {
 		return fmt.Errorf("HTTP server run: %w", err)

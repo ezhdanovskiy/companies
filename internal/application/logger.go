@@ -9,7 +9,7 @@ import (
 
 func newLogger(level, encoding string) (*zap.SugaredLogger, error) {
 	logConf := zap.NewProductionConfig()
-	if strings.ToLower(level) == "debug" {
+	if strings.EqualFold(level, "debug") {
 		logConf.Level = zap.NewAtomicLevelAt(zap.DebugLevel)
 	}
 	if encoding != "" {

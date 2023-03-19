@@ -1,6 +1,3 @@
-//go:build integration
-// +build integration
-
 package tests
 
 import (
@@ -48,7 +45,7 @@ func TestCreateCompany(t *testing.T) {
 		Type:            "Cooperative",
 	}
 
-	code, body := ts.doRequest(http.MethodPost, "/companies", req)
+	code, body := ts.doRequest(http.MethodPost, "/secured/companies", req)
 	assert.Equal(t, http.StatusCreated, code)
 	assert.Equal(t, "null", body)
 
@@ -136,6 +133,9 @@ func (ts *TestServer) doRequest(method, target string, body interface{}) (code i
 	}
 
 	req := httptest.NewRequest(method, target, b)
+	req.Header.Add("authorization", "Bearer eyJhbGciOiJIUzI1NiJ9."+
+		"eyJ1c2VybmFtZSI6InVrZXNoLm11cnVnYW4iLCJlbWFpbCI6InVrZXNoQGdvLmNvbSIsImV4cCI6MTcxMzM4NzYwMH0."+
+		"Dbcz0odhXAbdjM5HprynZ4eSv-OCBZqhymCZOC-MKiM")
 
 	recorder := httptest.NewRecorder()
 	ts.router.ServeHTTP(recorder, req)
@@ -144,7 +144,7 @@ func (ts *TestServer) doRequest(method, target string, body interface{}) (code i
 }
 
 func (ts *TestServer) cleanCompanies(uuids ...string) {
-	_, err := ts.db.QueryContext(context.Background(), "DELETE FROM companies WHERE id IN (?)", bun.In(uuids))
+	_, err := ts.db.ExecContext(context.Background(), "DELETE FROM companies WHERE id IN (?)", bun.In(uuids))
 	require.NoError(ts.t, err)
 }
 

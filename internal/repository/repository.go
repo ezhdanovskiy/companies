@@ -89,13 +89,13 @@ func (r *Repo) UpdateCompany(ctx context.Context, c *models.CompanyPatch) (affec
 	return affected, nil
 }
 
-func prepareCompanyPatch(c *models.CompanyPatch) (*Company, []string) {
+func prepareCompanyPatch(c *models.CompanyPatch) (company *Company, fields []string) {
 	t := time.Now()
-	company := &Company{
+	company = &Company{
 		ID:        c.ID,
 		UpdatedAt: &t,
 	}
-	fields := []string{"updated_at"}
+	fields = []string{"updated_at"}
 
 	if c.Name != nil && *c.Name != "" {
 		company.Name = *c.Name

@@ -8,7 +8,7 @@ type CreateCompany struct {
 	Description     string `json:"description" binding:"omitempty,max=3000"`
 	EmployeesAmount int    `json:"employees_amount" binding:"required"`
 	Registered      bool   `json:"registered" binding:"required"`
-	Type            string `json:"type" binding:"required,oneof=Corporations NonProfit Cooperative 'Sole Proprietorship'"` // Corporations | NonProfit | Cooperative | Sole Proprietorship
+	Type            string `json:"type" binding:"required,oneof=Corporations NonProfit Cooperative 'Sole Proprietorship'"`
 }
 
 func (c *CreateCompany) ToDomain() *models.Company {

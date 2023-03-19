@@ -11,9 +11,10 @@ import (
 type Config struct {
 	LogLevel    string `mapstructure:"log_level"`
 	LogEncoding string `mapstructure:"log_encoding"` // json/console
-	HttpPort    int    `mapstructure:"http_port"`
+	HTTPPort    int    `mapstructure:"http_port"`
 	DB          DB
 	Kafka       Kafka
+	JWTKey      string `mapstructure:"jwt_key"`
 }
 
 // DB contains parameter for configuring repository.
@@ -42,10 +43,10 @@ func NewConfig() (*Config, error) {
 
 	viper.SetDefault("log_level", "debug")
 	viper.SetDefault("log_encoding", "console")
-	viper.SetDefault("http_port", 8080)
+	viper.SetDefault("http_port", 8080) //nolint:gomnd
 
 	viper.SetDefault("db_host", "localhost")
-	viper.SetDefault("db_port", 5432)
+	viper.SetDefault("db_port", 5432) //nolint:gomnd
 	viper.SetDefault("db_user", "postgres")
 	viper.SetDefault("db_password", "postgres")
 	viper.SetDefault("db_name", "postgres")
@@ -53,8 +54,10 @@ func NewConfig() (*Config, error) {
 
 	viper.SetDefault("kafka_addr", "127.0.0.1:9092")
 	viper.SetDefault("kafka_topic", "companies-mutations")
-	viper.SetDefault("kafka_batch_size", 3)
+	viper.SetDefault("kafka_batch_size", 3) //nolint:gomnd,nolintlint
 	viper.SetDefault("kafka_batch_timeout", "10s")
+
+	viper.SetDefault("jwt_key", "supersecretkey")
 
 	_ = viper.ReadInConfig()
 
