@@ -25,6 +25,10 @@ type Repo struct {
 // MigrateUp applies migrations to DB.
 func MigrateUp(logger *zap.SugaredLogger, db *sql.DB, path string) error {
 	driver, err := postgres.WithInstance(db, &postgres.Config{})
+	if err != nil {
+		return fmt.Errorf("migrate postgres.WithInstance: %w", err)
+	}
+
 	m, err := migrate.NewWithDatabaseInstance(path, "postgres", driver)
 	if err != nil {
 		return fmt.Errorf("migrate NewWithDatabaseInstance: %w", err)

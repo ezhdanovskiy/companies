@@ -29,19 +29,7 @@ func NewServer(logger *zap.SugaredLogger, httpPort int, svc Service) *Server {
 func (s *Server) Run() error {
 	router := gin.Default()
 	apiV1 := router.Group("/api/v1")
-	apiV1.GET("/companies/:uuid", s.GetCompany)
-	//apiV1.Use(middlewares.Auth()).
-	apiV1.POST("/companies", s.CreateCompany)
-	apiV1.PATCH("/companies/:uuid", s.UpdateCompany)
-	apiV1.DELETE("/companies/:uuid", s.DeleteCompany)
-	//{
-	//	api.POST("/token", controllers.GenerateToken)
-	//	api.POST("/user/register", controllers.RegisterUser)
-	//	secured := api.Group("/secured").Use(middlewares.Auth())
-	//	{
-	//		secured.GET("/ping", controllers.Ping)
-	//	}
-	//}
+	s.SetAPIV1Routes(apiV1)
 
 	s.httpServer = &http.Server{
 		Addr:    fmt.Sprintf(":%d", s.httpPort),
@@ -54,6 +42,23 @@ func (s *Server) Run() error {
 	}
 
 	return nil
+}
+
+func (s *Server) SetAPIV1Routes(rg *gin.RouterGroup) {
+	//apiV1 := router.Group("/api/v1")
+	rg.GET("/companies/:uuid", s.GetCompany)
+	//apiV1.Use(middlewares.Auth()).
+	rg.POST("/companies", s.CreateCompany)
+	rg.PATCH("/companies/:uuid", s.UpdateCompany)
+	rg.DELETE("/companies/:uuid", s.DeleteCompany)
+	//{
+	//	api.POST("/token", controllers.GenerateToken)
+	//	api.POST("/user/register", controllers.RegisterUser)
+	//	secured := api.Group("/secured").Use(middlewares.Auth())
+	//	{
+	//		secured.GET("/ping", controllers.Ping)
+	//	}
+	//}
 }
 
 func (s *Server) Shutdown() {
