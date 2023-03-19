@@ -32,6 +32,8 @@ func (s *Server) Run() error {
 	apiV1.GET("/companies/:uuid", s.GetCompany)
 	//apiV1.Use(middlewares.Auth()).
 	apiV1.POST("/companies", s.CreateCompany)
+	apiV1.PATCH("/companies/:uuid", s.UpdateCompany)
+	apiV1.DELETE("/companies/:uuid", s.DeleteCompany)
 	//{
 	//	api.POST("/token", controllers.GenerateToken)
 	//	api.POST("/user/register", controllers.RegisterUser)

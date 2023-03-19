@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/ezhdanovskiy/companies/internal/http/requests"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -11,7 +12,7 @@ import (
 func (s *Server) CreateCompany(c *gin.Context) {
 	s.log.Debug("Server.CreateCompany")
 
-	var req CreateCompany
+	var req requests.CreateCompany
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"message": err.Error(),
@@ -19,7 +20,59 @@ func (s *Server) CreateCompany(c *gin.Context) {
 		return
 	}
 
-	err := s.svc.CreateCompany(c.Request.Context(), req.toDomain())
+	err := s.svc.CreateCompany(c.Request.Context(), req.ToDomain())
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusCreated, nil)
+}
+
+func (s *Server) UpdateCompany(c *gin.Context) {
+	uid := strings.ToLower(c.Param("uuid"))
+
+	if _, err := uuid.Parse(uid); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+	s.log.With("uuid", uid).Debug("Server.UpdateCompany")
+
+	var req requests.UpdateCompany
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	err := s.svc.UpdateCompany(c.Request.Context(), req.ToDomain(uid))
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, nil)
+}
+
+func (s *Server) DeleteCompany(c *gin.Context) {
+	uid := strings.ToLower(c.Param("uuid"))
+
+	if _, err := uuid.Parse(uid); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+	s.log.With("uuid", uid).Debug("Server.DeleteCompany")
+
+	err := s.svc.DeleteCompany(c.Request.Context(), uid)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"message": err.Error(),

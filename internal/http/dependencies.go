@@ -9,5 +9,7 @@ import (
 // Service describes the service methods required for the server.
 type Service interface {
 	CreateCompany(ctx context.Context, company *models.Company) error
-	GetCompany(ctx context.Context, uuid string) (*models.Company, error)
+	UpdateCompany(ctx context.Context, companyPatch *models.CompanyPatch) error
+	DeleteCompany(ctx context.Context, companyUUID string) error
+	GetCompany(ctx context.Context, companyUUID string) (*models.Company, error)
 }

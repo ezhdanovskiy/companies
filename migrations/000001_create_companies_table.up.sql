@@ -3,12 +3,12 @@ CREATE TYPE company_type AS ENUM ('Corporations', 'NonProfit', 'Cooperative', 'S
 CREATE TABLE "companies"
 (
     "id"               uuid PRIMARY KEY,
-    "name"             varchar(15)  NOT NULL UNIQUE,
-    "description"      varchar(3000),
-    "employees_amount" int          NOT NULL,
-    "registered"       bool         NOT NULL,
-    "type"             company_type NOT NULL,
-    "created_at"       timestamptz  NOT NULL DEFAULT now(),
+    "name"             varchar(15)   NOT NULL UNIQUE,
+    "description"      varchar(3000) NOT NULL DEFAULT '',
+    "employees_amount" int           NOT NULL,
+    "registered"       bool          NOT NULL,
+    "type"             company_type  NOT NULL,
+    "created_at"       timestamptz   NOT NULL DEFAULT now(),
     "updated_at"       timestamptz
 );
 

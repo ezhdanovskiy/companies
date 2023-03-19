@@ -27,3 +27,14 @@ func (c *Company) toDomain() *models.Company {
 		Type:            c.Type,
 	}
 }
+
+func newCompany(m *models.Company) *Company {
+	return &Company{
+		ID:              m.ID,
+		Name:            m.Name,
+		Description:     m.Description,
+		EmployeesAmount: m.EmployeesAmount,
+		Registered:      m.Registered,
+		Type:            m.Type,
+	}
+}

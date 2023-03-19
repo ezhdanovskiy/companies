@@ -53,6 +53,10 @@ func (a *Application) Run() error {
 		return fmt.Errorf("connect database: %w", err)
 	}
 
+	if err := repository.MigrateUp(a.log, db.DB, "file://"+a.cfg.DB.MigrationsPath); err != nil {
+		return fmt.Errorf("migrate up: %w", err)
+	}
+
 	repo, err := repository.NewRepo(a.log, db)
 	if err != nil {
 		return fmt.Errorf("new repo: %w", err)

@@ -8,3 +8,12 @@ type Company struct {
 	Registered      bool
 	Type            string // Corporations | NonProfit | Cooperative | Sole Proprietorship
 }
+
+type CompanyPatch struct {
+	ID              string
+	Name            *string
+	Description     *string
+	EmployeesAmount *int
+	Registered      *bool
+	Type            *string // Corporations | NonProfit | Cooperative | Sole Proprietorship
+}

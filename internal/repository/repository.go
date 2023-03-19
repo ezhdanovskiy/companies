@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/ezhdanovskiy/companies/internal/models"
 	"github.com/golang-migrate/migrate/v4"
@@ -22,8 +23,8 @@ type Repo struct {
 }
 
 // MigrateUp applies migrations to DB.
-func MigrateUp(logger *zap.SugaredLogger, db *sqlx.DB, path string) error {
-	driver, err := postgres.WithInstance(db.DB, &postgres.Config{})
+func MigrateUp(logger *zap.SugaredLogger, db *sql.DB, path string) error {
+	driver, err := postgres.WithInstance(db, &postgres.Config{})
 	m, err := migrate.NewWithDatabaseInstance(path, "postgres", driver)
 	if err != nil {
 		return fmt.Errorf("migrate NewWithDatabaseInstance: %w", err)
@@ -58,12 +59,58 @@ func (r *Repo) CreateCompany(ctx context.Context, c *models.Company) error {
 
 	const query = `
 INSERT INTO companies (id, name, description, employees_amount, registered, type)
-VALUES ($1, $2, $3, $4, $5, $6)
+VALUES (:id, :name, :description, :employees_amount, :registered, :type)
 `
-
-	_, err := r.db.ExecContext(ctx, query, c.ID, c.Name, c.Description, c.EmployeesAmount, c.Registered, c.Type)
+	_, err := r.db.NamedExecContext(ctx, query, newCompany(c))
 	if err != nil {
 		return fmt.Errorf("insert company: %w", err)
+	}
+
+	return nil
+}
+
+// UpdateCompany insert a company.
+func (r *Repo) UpdateCompany(ctx context.Context, c *models.CompanyPatch) error {
+	r.log.With("id", c.ID, "name", c.Name, "descr", c.Description, "amount", c.EmployeesAmount,
+		"registered", c.Registered, "type", c.Type).Debug("Repo.CreateCompany")
+
+	args := []any{c.ID}
+	var setStr string
+	if c.Name != nil {
+		args = append(args, *c.Name)
+		setStr += fmt.Sprintf("%s = $%v, ", "name", len(args)+1)
+	}
+
+	setStr = strings.TrimSuffix(setStr, ", ")
+
+	const query = `
+UPDATE companies 
+SET %s
+WHERE id = $1
+`
+
+	s := fmt.Sprintf(query, setStr)
+	_, err := r.db.ExecContext(ctx, s, args...)
+	if err != nil {
+		r.log.Error(err)
+		return fmt.Errorf("update company: %w", err)
+	}
+
+	return nil
+}
+
+// DeleteCompany deletes a company.
+func (r *Repo) DeleteCompany(ctx context.Context, uuid string) error {
+	r.log.With("uuid", uuid).Debug("Repo.DeleteCompany")
+
+	const query = `
+DELETE FROM companies
+WHERE id = $1
+`
+
+	_, err := r.db.ExecContext(ctx, query, uuid)
+	if err != nil {
+		return fmt.Errorf("delete company: %w", err)
 	}
 
 	return nil
@@ -84,7 +131,7 @@ WHERE id = $1
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("select: %w", err)
+		return nil, fmt.Errorf("select company: %w", err)
 	}
 
 	return company.toDomain(), nil
