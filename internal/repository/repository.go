@@ -70,6 +70,22 @@ func (r *Repo) UpdateCompany(ctx context.Context, c *models.CompanyPatch) (affec
 	r.log.With("id", c.ID, "name", c.Name, "descr", c.Description, "amount", c.EmployeesAmount,
 		"registered", c.Registered, "type", c.Type).Debug("Repo.CreateCompany")
 
+	company, fields := prepareCompanyPatch(c)
+
+	res, err := r.db.NewUpdate().Model(company).Column(fields...).WherePK().Exec(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("update company: %w", err)
+	}
+
+	affected, err = res.RowsAffected()
+	if err != nil {
+		return 0, fmt.Errorf("delete company rows affected: %w", err)
+	}
+
+	return affected, nil
+}
+
+func prepareCompanyPatch(c *models.CompanyPatch) (*Company, []string) {
 	t := time.Now()
 	company := &Company{
 		ID:        c.ID,
@@ -101,18 +117,7 @@ func (r *Repo) UpdateCompany(ctx context.Context, c *models.CompanyPatch) (affec
 		company.Type = *c.Type
 		fields = append(fields, "type")
 	}
-
-	res, err := r.db.NewUpdate().Model(company).Column(fields...).WherePK().Exec(ctx)
-	if err != nil {
-		return 0, fmt.Errorf("update company: %w", err)
-	}
-
-	affected, err = res.RowsAffected()
-	if err != nil {
-		return 0, fmt.Errorf("delete company rows affected: %w", err)
-	}
-
-	return affected, nil
+	return company, fields
 }
 
 // DeleteCompany deletes a company.
