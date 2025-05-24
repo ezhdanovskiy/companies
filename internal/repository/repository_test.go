@@ -78,7 +78,7 @@ func TestPrepareCompanyPatch_Registered(t *testing.T) {
 }
 
 func TestPrepareCompanyPatch_Type(t *testing.T) {
-	companyType := string(models.Corporations)
+	companyType := "Corporations"
 	c := &models.CompanyPatch{
 		ID:   "uuid1",
 		Type: &companyType,
@@ -95,7 +95,7 @@ func TestPrepareCompanyPatch_AllFields(t *testing.T) {
 	description := "Test description"
 	amount := 500
 	registered := true
-	companyType := string(models.NonProfit)
+	companyType := "NonProfit"
 
 	c := &models.CompanyPatch{
 		ID:              "uuid1",
