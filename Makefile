@@ -3,7 +3,7 @@ CUR_DIR=$(shell pwd)
 SRC=$(CUR_DIR)/cmd/companies
 BINARY_NAME=$(CUR_DIR)/bin/$(APP_NAME)
 
-.PHONY: generate fmt test test/int build run clean mod/tidy build-container run-container
+.PHONY: generate fmt test test/int build run clean mod/tidy build-container run-container diagrams
 
 all: fmt generate test build clean mod/tidy
 
@@ -118,3 +118,15 @@ company/get:
 	curl --location 'http://localhost:8080/api/v1/companies/abc8c242-00ed-40a6-82df-ea0d3afd0867' -w "\n\n"
 
 company/livecycle: company/create company/get company/patch company/get company/delete
+
+diagrams:
+	$(info ************ GENERATE DIAGRAMS ************)
+	@if command -v dot >/dev/null 2>&1; then \
+		find docs/diagrams -name "*.dot" -exec sh -c 'dot -Tpng $$1 -o $${1%.dot}.png' _ {} \; ; \
+		echo "Диаграммы успешно сгенерированы"; \
+	else \
+		echo "Graphviz не установлен. Установите его для генерации диаграмм:"; \
+		echo "  macOS: brew install graphviz"; \
+		echo "  Ubuntu/Debian: sudo apt-get install graphviz"; \
+		echo "  CentOS/RHEL: sudo yum install graphviz"; \
+	fi
