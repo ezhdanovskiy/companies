@@ -29,7 +29,7 @@ func GenerateJWT(email, username string) (tokenString string, err error) {
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err = token.SignedString(jwtKey)
+	tokenString, err = token.SignedString([]byte(jwtKey))
 	return
 }
 
