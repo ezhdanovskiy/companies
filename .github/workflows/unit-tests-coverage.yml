@@ -1,4 +1,4 @@
-name: Unit Tests and Coverage
+name: Tests and Coverage
 
 on:
   push:
@@ -45,16 +45,8 @@ jobs:
 
     - name: Run unit tests with coverage
       run: |
-        # Run only unit tests, skip integration tests
-        go test -v -race -coverprofile=coverage.out -covermode=atomic \
-          ./internal/auth/... \
-          ./internal/config/... \
-          ./internal/http/... \
-          ./internal/kafka/... \
-          ./internal/middlewares/... \
-          ./internal/models/... \
-          ./internal/repository/... \
-          ./internal/service/...
+        # Run unit tests, excluding integration tests directory
+        go test -v -race -coverprofile=coverage.out -covermode=atomic $(go list ./... | grep -v /tests)
       env:
         DB_HOST: localhost
         DB_PORT: 5432
@@ -62,8 +54,6 @@ jobs:
         DB_PASSWORD: postgres
         DB_NAME: testdb
         DB_SSL_MODE: disable
-        KAFKA_ADDR: localhost:9092
-        KAFKA_TOPIC: companies-mutations
         JWT_KEY: test-secret-key
         HTTP_PORT: 8080
         LOG_LEVEL: debug
