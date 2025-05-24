@@ -117,15 +117,18 @@ company/get:
 	$(info ************ Get company ************)
 	curl --location 'http://localhost:8080/api/v1/companies/abc8c242-00ed-40a6-82df-ea0d3afd0867' -w "\n\n"
 
-company/livecycle: company/create company/get company/patch company/get company/delete
+company/lifecycle: company/create company/get company/patch company/get company/delete
 
 diagrams:
 	$(info ************ GENERATE DIAGRAMS ************)
 	@if command -v dot >/dev/null 2>&1; then \
-		find docs/diagrams -name "*.dot" -exec sh -c 'dot -Tpng $$1 -o $${1%.dot}.png' _ {} \; ; \
-		echo "Диаграммы успешно сгенерированы"; \
+		count=0; \
+		for file in $$(find docs/diagrams -name "*.dot"); do \
+			dot -Tpng $$file -o $${file%.dot}.png && count=$$((count+1)); \
+		done; \
+		echo "Successfully generated $$count diagram(s)"; \
 	else \
-		echo "Graphviz не установлен. Установите его для генерации диаграмм:"; \
+		echo "Graphviz is not installed. Please install it to generate diagrams:"; \
 		echo "  macOS: brew install graphviz"; \
 		echo "  Ubuntu/Debian: sudo apt-get install graphviz"; \
 		echo "  CentOS/RHEL: sudo yum install graphviz"; \
