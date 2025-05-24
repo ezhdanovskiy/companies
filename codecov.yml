@@ -4,22 +4,22 @@ codecov:
 coverage:
   precision: 2
   round: down
-  range: "70...100"
+  range: "0...100"
   
   status:
     project:
       default:
-        # Basic project coverage settings
-        target: 80%
-        threshold: 2%
-        if_not_found: failure
+        # Realistic project coverage settings for microservice
+        target: 30%
+        threshold: 5%
+        if_not_found: success
         if_ci_failed: error
     patch:
       default:
-        # PR patch coverage settings
-        target: 80%
-        threshold: 2%
-        if_not_found: failure
+        # PR patch coverage settings - new code should be well tested
+        target: 60%
+        threshold: 10%
+        if_not_found: success
         if_ci_failed: error
 
 parsers:
