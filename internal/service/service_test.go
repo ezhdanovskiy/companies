@@ -205,7 +205,7 @@ func TestNewService_GetCompany(t *testing.T) {
 		Description:     "Test Description",
 		EmployeesAmount: 100,
 		Registered:      true,
-		Type:            string(models.Corporations),
+		Type:            "Corporations",
 	}
 
 	ts.mockRepo.EXPECT().GetCompany(ctx, uuid).
