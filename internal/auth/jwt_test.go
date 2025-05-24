@@ -115,7 +115,7 @@ func TestValidateToken(t *testing.T) {
 			name:    "Expired token",
 			token:   expiredToken,
 			wantErr: true,
-			errMsg:  "token expired",
+			errMsg:  "token is expired",
 		},
 		{
 			name:    "Invalid token format",
