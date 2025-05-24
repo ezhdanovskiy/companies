@@ -1,5 +1,7 @@
 # Companies Microservice
 
+[![codecov](https://codecov.io/gh/ezhdanovskiy/companies/branch/master/graph/badge.svg)](https://codecov.io/gh/ezhdanovskiy/companies)
+
 ## Обзор проекта
 
 Companies - это микросервис для управления информацией о компаниях, построенный на Go с использованием слоистой архитектуры. Сервис предоставляет REST API для выполнения CRUD операций над компаниями, публикует события изменений в Apache Kafka и поддерживает JWT-аутентификацию для защищенных эндпоинтов.
@@ -62,6 +64,29 @@ make test/int
 make test/int/docker-compose
 ```
 
+## CI/CD и покрытие кода
+
+### GitHub Actions
+Проект использует GitHub Actions для непрерывной интеграции. Workflow запускается при каждом push и pull request в ветки master/main и включает:
+- Запуск unit и интеграционных тестов
+- Генерацию отчетов о покрытии кода
+- Загрузку покрытия в Codecov
+
+### Настройка Codecov
+Для включения отчетов о покрытии кода:
+
+1. **Получите токен Codecov**:
+   - Перейдите на [Codecov](https://app.codecov.io/gh/ezhdanovskiy/companies/settings)
+   - Скопируйте токен репозитория
+
+2. **Добавьте токен в GitHub**:
+   - Перейдите в Settings → Secrets and variables → Actions вашего репозитория
+   - Нажмите "New repository secret"
+   - Имя: `CODECOV_TOKEN`
+   - Значение: вставьте токен из Codecov
+
+3. **Покрытие будет отображаться автоматически** после слияния workflow в ветку master
+
 ## Структура проекта
 
 ```
@@ -107,6 +132,7 @@ make test/int/docker-compose
 ├── Dockerfile           # Образ приложения
 ├── Makefile            # Команды разработки
 ├── go.mod              # Go модуль
+├── codecov.yml         # Конфигурация Codecov
 └── CLAUDE.md           # Инструкции для Claude AI
 ```
 

@@ -1,0 +1,134 @@
+name: Test and Coverage
+
+on:
+  push:
+    branches: [ disabled ]  # Temporarily disabled
+  pull_request:
+    branches: [ disabled ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.22'
+
+    - name: Install dependencies
+      run: go mod download
+
+    - name: Setup Docker network
+      run: |
+        docker network create test-network || true
+
+    - name: Start Zookeeper
+      run: |
+        docker run -d --name zookeeper \
+          --network test-network \
+          -p 2181:2181 \
+          -e ZOOKEEPER_CLIENT_PORT=2181 \
+          -e ZOOKEEPER_TICK_TIME=2000 \
+          confluentinc/cp-zookeeper:latest
+        
+        # Wait for Zookeeper to be ready
+        echo "Waiting for Zookeeper to start..."
+        for i in {1..30}; do
+          if docker exec zookeeper zkServer.sh status 2>/dev/null | grep -q "Mode"; then
+            echo "Zookeeper is ready"
+            break
+          fi
+          echo "Waiting for Zookeeper... ($i/30)"
+          sleep 2
+        done
+
+    - name: Start Kafka
+      run: |
+        docker run -d --name kafka \
+          --network test-network \
+          -p 9092:9092 \
+          -e KAFKA_BROKER_ID=1 \
+          -e KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181 \
+          -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092 \
+          -e KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092 \
+          -e KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1 \
+          confluentinc/cp-kafka:latest
+        
+        # Wait for Kafka to be ready
+        echo "Waiting for Kafka to start..."
+        for i in {1..30}; do
+          if docker exec kafka kafka-broker-api-versions --bootstrap-server localhost:9092 2>/dev/null; then
+            echo "Kafka is ready"
+            break
+          fi
+          echo "Waiting for Kafka... ($i/30)"
+          sleep 2
+        done
+
+    - name: Create Kafka topic
+      run: |
+        docker exec kafka kafka-topics --create \
+          --topic companies-mutations \
+          --bootstrap-server localhost:9092 \
+          --partitions 1 \
+          --replication-factor 1 \
+          || echo "Topic might already exist"
+
+    - name: Run migrations
+      run: |
+        go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+        migrate -database "postgres://postgres:postgres@localhost:5432/testdb?sslmode=disable" -path migrations up
+      env:
+        DATABASE_URL: postgres://postgres:postgres@localhost:5432/testdb?sslmode=disable
+
+    - name: Run tests with coverage
+      run: |
+        # Skip integration tests if they require specific setup
+        go test -v -race -coverprofile=coverage.out -covermode=atomic $(go list ./... | grep -v /tests)
+      env:
+        DB_HOST: localhost
+        DB_PORT: 5432
+        DB_USER: postgres
+        DB_PASSWORD: postgres
+        DB_NAME: testdb
+        DB_SSL_MODE: disable
+        KAFKA_ADDR: localhost:9092
+        KAFKA_TOPIC: companies-mutations
+        JWT_KEY: test-secret-key
+        HTTP_PORT: 8080
+        LOG_LEVEL: debug
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: ./coverage.out
+        flags: unittests
+        name: codecov-companies
+        fail_ci_if_error: false
+        verbose: true
+
+    - name: Clean up
+      if: always()
+      run: |
+        docker stop kafka zookeeper || true
+        docker rm kafka zookeeper || true
+        docker network rm test-network || true

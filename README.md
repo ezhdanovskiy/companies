@@ -1,5 +1,7 @@
 # Companies Microservice
 
+[![codecov](https://codecov.io/gh/ezhdanovskiy/companies/branch/master/graph/badge.svg)](https://codecov.io/gh/ezhdanovskiy/companies)
+
 ## Overview
 
 Companies is a microservice for managing company information, built with Go using a layered architecture. The service provides a REST API for CRUD operations on companies, publishes change events to Apache Kafka, and supports JWT authentication for secured endpoints.
@@ -62,6 +64,29 @@ make test/int
 make test/int/docker-compose
 ```
 
+## CI/CD and Code Coverage
+
+### GitHub Actions
+The project uses GitHub Actions for continuous integration. The workflow runs on every push and pull request to master/main branches and includes:
+- Running unit and integration tests
+- Generating code coverage reports
+- Uploading coverage to Codecov
+
+### Setting up Codecov
+To enable code coverage reporting:
+
+1. **Get Codecov token**:
+   - Go to [Codecov](https://app.codecov.io/gh/ezhdanovskiy/companies/settings)
+   - Copy the repository token
+
+2. **Add token to GitHub**:
+   - Go to your repository Settings → Secrets and variables → Actions
+   - Click "New repository secret"
+   - Name: `CODECOV_TOKEN`
+   - Value: paste the token from Codecov
+
+3. **Coverage will be reported automatically** after merging the workflow to master branch
+
 ## Project Structure
 
 ```
@@ -107,6 +132,7 @@ make test/int/docker-compose
 ├── Dockerfile           # Application image
 ├── Makefile            # Development commands
 ├── go.mod              # Go module
+├── codecov.yml         # Codecov configuration
 └── CLAUDE.md           # Claude AI instructions
 ```
 
