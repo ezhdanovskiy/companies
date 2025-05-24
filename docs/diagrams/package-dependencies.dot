@@ -1,0 +1,163 @@
+// Generated with Graphviz 2.43.0
+// Version: 1.0 - May 2025
+// Description: Package dependencies diagram for Companies microservice
+
+digraph PackageDependencies {
+    rankdir=TB;
+    node [shape=box, style="rounded,filled", fillcolor=lightblue];
+    edge [color=gray];
+    
+    // Title and metadata
+    label="Companies Microservice - Package Dependencies\nVersion 1.0 - May 2025";
+    labelloc="t";
+    fontsize=16;
+    
+    // External services
+    subgraph cluster_external {
+        label="External Services";
+        style=dotted;
+        fillcolor=lightyellow;
+        node [fillcolor=lightyellow];
+        
+        PostgreSQL [shape=cylinder, fillcolor=lightgreen];
+        Kafka [shape=cylinder, fillcolor=lightgreen];
+        Zookeeper [shape=cylinder, fillcolor=lightgreen];
+    }
+    
+    // Main entry point
+    main [label="cmd/companies\nmain.go", fillcolor=darkseagreen];
+    
+    // Application layer
+    subgraph cluster_application {
+        label="Application Layer";
+        style=filled;
+        fillcolor=lavender;
+        node [fillcolor=lavender];
+        
+        application [label="application/\napplication.go"];
+        logger [label="application/\nlogger.go"];
+    }
+    
+    // HTTP layer
+    subgraph cluster_http {
+        label="HTTP Layer";
+        style=filled;
+        fillcolor=lightcoral;
+        node [fillcolor=lightcoral];
+        
+        server [label="http/\nserver.go"];
+        handlers [label="http/\nhandlers.go"];
+        requests [label="http/requests/\nDTOs"];
+    }
+    
+    // Service layer
+    subgraph cluster_service {
+        label="Service Layer";
+        style=filled;
+        fillcolor=lightsteelblue;
+        node [fillcolor=lightsteelblue];
+        
+        service [label="service/\nservice.go"];
+    }
+    
+    // Repository layer
+    subgraph cluster_repository {
+        label="Repository Layer";
+        style=filled;
+        fillcolor=lightsalmon;
+        node [fillcolor=lightsalmon];
+        
+        repository [label="repository/\nrepository.go"];
+        entities [label="repository/\nentities.go"];
+    }
+    
+    // Infrastructure components
+    subgraph cluster_infrastructure {
+        label="Infrastructure";
+        style=filled;
+        fillcolor=lightgray;
+        node [fillcolor=lightgray];
+        
+        config [label="config/\nconfig.go"];
+        kafka_producer [label="kafka/\nproducer.go"];
+        kafka_message [label="kafka/\nmessage.go"];
+        auth [label="auth/\njwt.go"];
+        middlewares [label="middlewares/\nauth.go"];
+    }
+    
+    // Core models
+    models [label="models/\ncompany.go\nerrors.go", fillcolor=gold];
+    
+    // Test layer
+    subgraph cluster_tests {
+        label="Tests";
+        style=dashed;
+        fillcolor=lightpink;
+        node [fillcolor=lightpink];
+        
+        integration_tests [label="tests/\nintegration_test.go"];
+    }
+    
+    // Dependencies
+    main -> application;
+    
+    application -> server;
+    application -> config;
+    application -> logger;
+    application -> repository;
+    application -> service;
+    application -> kafka_producer;
+    
+    server -> handlers;
+    server -> middlewares;
+    handlers -> service;
+    handlers -> requests;
+    handlers -> auth;
+    
+    middlewares -> auth;
+    
+    service -> repository;
+    service -> kafka_producer;
+    service -> models;
+    
+    kafka_producer -> kafka_message;
+    kafka_producer -> Kafka;
+    
+    repository -> entities;
+    repository -> models;
+    repository -> PostgreSQL;
+    
+    // Kafka dependencies
+    Kafka -> Zookeeper;
+    
+    // Test dependencies
+    integration_tests -> application [style=dashed];
+    integration_tests -> PostgreSQL [style=dashed];
+    integration_tests -> Kafka [style=dashed];
+    
+    // Legend
+    subgraph cluster_legend {
+        label="Legend";
+        style=filled;
+        fillcolor=white;
+        node [shape=plaintext];
+        
+        legend [label=<
+            <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4">
+                <TR><TD COLSPAN="2"><B>Color Coding</B></TD></TR>
+                <TR><TD BGCOLOR="darkseagreen">Entry Point</TD><TD>Main application entry</TD></TR>
+                <TR><TD BGCOLOR="lavender">Application Layer</TD><TD>Initialization & orchestration</TD></TR>
+                <TR><TD BGCOLOR="lightcoral">HTTP Layer</TD><TD>Request handling & routing</TD></TR>
+                <TR><TD BGCOLOR="lightsteelblue">Service Layer</TD><TD>Business logic</TD></TR>
+                <TR><TD BGCOLOR="lightsalmon">Repository Layer</TD><TD>Data persistence</TD></TR>
+                <TR><TD BGCOLOR="lightgray">Infrastructure</TD><TD>Cross-cutting concerns</TD></TR>
+                <TR><TD BGCOLOR="gold">Core Models</TD><TD>Domain entities</TD></TR>
+                <TR><TD BGCOLOR="lightgreen">External Services</TD><TD>Database & messaging</TD></TR>
+                <TR><TD BGCOLOR="lightpink">Tests</TD><TD>Test suites</TD></TR>
+                <TR><TD COLSPAN="2"><B>Edge Styles</B></TD></TR>
+                <TR><TD>Solid line</TD><TD>Direct dependency</TD></TR>
+                <TR><TD>Dashed line</TD><TD>Test dependency</TD></TR>
+            </TABLE>
+        >];
+    }
+}
