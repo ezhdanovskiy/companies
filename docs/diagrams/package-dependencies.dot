@@ -146,13 +146,13 @@ digraph PackageDependencies {
             <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4">
                 <TR><TD COLSPAN="2"><B>Color Coding</B></TD></TR>
                 <TR><TD BGCOLOR="darkseagreen">Entry Point</TD><TD>Main application entry</TD></TR>
-                <TR><TD BGCOLOR="lavender">Application Layer</TD><TD>Initialization & orchestration</TD></TR>
-                <TR><TD BGCOLOR="lightcoral">HTTP Layer</TD><TD>Request handling & routing</TD></TR>
+                <TR><TD BGCOLOR="lavender">Application Layer</TD><TD>Initialization &amp; orchestration</TD></TR>
+                <TR><TD BGCOLOR="lightcoral">HTTP Layer</TD><TD>Request handling &amp; routing</TD></TR>
                 <TR><TD BGCOLOR="lightsteelblue">Service Layer</TD><TD>Business logic</TD></TR>
                 <TR><TD BGCOLOR="lightsalmon">Repository Layer</TD><TD>Data persistence</TD></TR>
                 <TR><TD BGCOLOR="lightgray">Infrastructure</TD><TD>Cross-cutting concerns</TD></TR>
                 <TR><TD BGCOLOR="gold">Core Models</TD><TD>Domain entities</TD></TR>
-                <TR><TD BGCOLOR="lightgreen">External Services</TD><TD>Database & messaging</TD></TR>
+                <TR><TD BGCOLOR="lightgreen">External Services</TD><TD>Database &amp; messaging</TD></TR>
                 <TR><TD BGCOLOR="lightpink">Tests</TD><TD>Test suites</TD></TR>
                 <TR><TD COLSPAN="2"><B>Edge Styles</B></TD></TR>
                 <TR><TD>Solid line</TD><TD>Direct dependency</TD></TR>
