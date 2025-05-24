@@ -9,6 +9,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    
     services:
       postgres:
         image: postgres:14
@@ -23,24 +24,6 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-      
-      kafka:
-        image: confluentinc/cp-kafka:latest
-        ports:
-          - 9092:9092
-        env:
-          KAFKA_BROKER_ID: 1
-          KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-          KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
-          KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      
-      zookeeper:
-        image: confluentinc/cp-zookeeper:latest
-        ports:
-          - 2181:2181
-        env:
-          ZOOKEEPER_CLIENT_PORT: 2181
-          ZOOKEEPER_TICK_TIME: 2000
 
     steps:
     - uses: actions/checkout@v4
@@ -52,6 +35,33 @@ jobs:
 
     - name: Install dependencies
       run: go mod download
+
+    - name: Start Kafka and Zookeeper
+      run: |
+        docker run -d --name zookeeper -p 2181:2181 \
+          -e ZOOKEEPER_CLIENT_PORT=2181 \
+          -e ZOOKEEPER_TICK_TIME=2000 \
+          confluentinc/cp-zookeeper:latest
+        
+        sleep 10
+        
+        docker run -d --name kafka -p 9092:9092 \
+          -e KAFKA_BROKER_ID=1 \
+          -e KAFKA_ZOOKEEPER_CONNECT=host.docker.internal:2181 \
+          -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092 \
+          -e KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092 \
+          -e KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1 \
+          confluentinc/cp-kafka:latest
+        
+        sleep 20
+
+    - name: Create Kafka topic
+      run: |
+        docker exec kafka kafka-topics --create \
+          --topic companies-mutations \
+          --bootstrap-server localhost:9092 \
+          --partitions 1 \
+          --replication-factor 1
 
     - name: Run migrations
       run: |
@@ -69,16 +79,24 @@ jobs:
         DB_PASSWORD: postgres
         DB_NAME: testdb
         DB_SSL_MODE: disable
-        KAFKA_BROKERS: localhost:9092
+        KAFKA_ADDR: localhost:9092
         KAFKA_TOPIC: companies-mutations
-        JWT_SECRET: test-secret
-        SERVER_PORT: 8080
+        JWT_KEY: test-secret-key
+        HTTP_PORT: 8080
+        LOG_LEVEL: debug
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
       with:
+        token: ${{ secrets.CODECOV_TOKEN }}
         file: ./coverage.out
         flags: unittests
-        name: codecov-umbrella
+        name: codecov-companies
         fail_ci_if_error: false
         verbose: true
+
+    - name: Clean up
+      if: always()
+      run: |
+        docker stop kafka zookeeper || true
+        docker rm kafka zookeeper || true
