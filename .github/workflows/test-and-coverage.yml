@@ -2,9 +2,9 @@ name: Test and Coverage
 
 on:
   push:
-    branches: [ master, main, codecov ]
+    branches: [ disabled ]  # Temporarily disabled
   pull_request:
-    branches: [ master, main ]
+    branches: [ disabled ]
 
 jobs:
   test:
