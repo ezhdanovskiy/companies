@@ -1,165 +1,165 @@
 # Companies Microservice
 
-## Обзор проекта
+## Overview
 
-Companies - это микросервис для управления информацией о компаниях, построенный на Go с использованием слоистой архитектуры. Сервис предоставляет REST API для выполнения CRUD операций над компаниями, публикует события изменений в Apache Kafka и поддерживает JWT-аутентификацию для защищенных эндпоинтов.
+Companies is a microservice for managing company information, built with Go using a layered architecture. The service provides a REST API for CRUD operations on companies, publishes change events to Apache Kafka, and supports JWT authentication for secured endpoints.
 
-### Основные возможности
-- 🏢 Полный CRUD для управления компаниями
-- 🔐 JWT-аутентификация для защищенных операций
-- 📨 Асинхронная публикация событий в Kafka
-- 🗄️ PostgreSQL для хранения данных
-- 🐳 Docker-контейнеризация
-- ✅ Покрытие unit и интеграционными тестами
+### Key Features
+- 🏢 Full CRUD for company management
+- 🔐 JWT authentication for secured operations
+- 📨 Asynchronous event publishing to Kafka
+- 🗄️ PostgreSQL for data storage
+- 🐳 Docker containerization
+- ✅ Unit and integration test coverage
 
-## Быстрый старт
+## Quick Start
 
-### Предварительные требования
+### Prerequisites
 - Go 1.19+
-- Docker и Docker Compose
+- Docker and Docker Compose
 - Make
-- curl (для тестирования API)
+- curl (for API testing)
 
-### Локальный запуск
+### Local Setup
 
-1. Склонируйте репозиторий:
+1. Clone the repository:
 ```bash
 git clone https://github.com/ezhdanovskiy/companies.git
 cd companies
 ```
 
-2. Запустите приложение с инфраструктурой:
+2. Run the application with infrastructure:
 ```bash
 make run/local
 ```
-Эта команда:
-- Запустит PostgreSQL и Kafka в Docker
-- Создаст Kafka топик `companies-mutations`
-- Применит миграции БД
-- Соберет и запустит приложение
+This command will:
+- Start PostgreSQL and Kafka in Docker
+- Create Kafka topic `companies-mutations`
+- Apply database migrations
+- Build and run the application
 
-3. В отдельном терминале протестируйте API:
+3. In a separate terminal, test the API:
 ```bash
-make company/livecycle
+make company/lifecycle
 ```
-Это выполнит полный CRUD цикл операций над компанией.
+This will execute a complete CRUD cycle on a company.
 
-4. Для просмотра событий в Kafka:
+4. To view Kafka events:
 ```bash
 make kafka/topic/consume
 ```
 
-### Запуск тестов
+### Running Tests
 
 ```bash
-# Unit тесты
+# Unit tests
 make test
 
-# Интеграционные тесты
+# Integration tests
 make test/int
 
-# Полный цикл тестирования с docker-compose
+# Full test cycle with docker-compose
 make test/int/docker-compose
 ```
 
-## Структура проекта
+## Project Structure
 
 ```
 .
 ├── cmd/
-│   └── companies/          # Точка входа приложения
+│   └── companies/          # Application entry point
 │       └── main.go
-├── internal/              # Внутренние пакеты приложения
-│   ├── application/       # Инициализация и оркестрация
+├── internal/              # Internal application packages
+│   ├── application/       # Initialization and orchestration
 │   │   ├── application.go
 │   │   └── logger.go
-│   ├── auth/             # JWT аутентификация
+│   ├── auth/             # JWT authentication
 │   │   └── jwt.go
-│   ├── config/           # Конфигурация приложения
+│   ├── config/           # Application configuration
 │   │   └── config.go
-│   ├── http/             # HTTP слой (Gin)
+│   ├── http/             # HTTP layer (Gin)
 │   │   ├── handlers.go
 │   │   ├── server.go
 │   │   ├── dependencies.go
-│   │   ├── requests/     # DTO для запросов
-│   │   └── mocks/        # Моки для тестов
+│   │   ├── requests/     # Request DTOs
+│   │   └── mocks/        # Test mocks
 │   ├── kafka/            # Kafka producer
 │   │   ├── producer.go
 │   │   └── message.go
 │   ├── middlewares/      # HTTP middlewares
 │   │   └── auth.go
-│   ├── models/           # Доменные модели
+│   ├── models/           # Domain models
 │   │   ├── company.go
 │   │   └── errors.go
-│   ├── repository/       # Слой работы с БД
+│   ├── repository/       # Database layer
 │   │   ├── repository.go
 │   │   ├── repository_test.go
 │   │   └── entities.go
-│   ├── service/          # Бизнес-логика
+│   ├── service/          # Business logic
 │   │   ├── service.go
 │   │   ├── service_test.go
 │   │   ├── dependencies.go
 │   │   └── mocks/
-│   └── tests/            # Интеграционные тесты
+│   └── tests/            # Integration tests
 │       └── integration_test.go
-├── migrations/           # SQL миграции
-├── docker-compose.yml    # Конфигурация Docker
-├── Dockerfile           # Образ приложения
-├── Makefile            # Команды разработки
-├── go.mod              # Go модуль
-└── CLAUDE.md           # Инструкции для Claude AI
+├── migrations/           # SQL migrations
+├── docker-compose.yml    # Docker configuration
+├── Dockerfile           # Application image
+├── Makefile            # Development commands
+├── go.mod              # Go module
+└── CLAUDE.md           # Claude AI instructions
 ```
 
-## Архитектура
+## Architecture
 
-Приложение построено с использованием слоистой архитектуры (Layered Architecture):
+The application is built using a Layered Architecture pattern:
 
-![Диаграмма зависимостей пакетов](docs/diagrams/package-dependencies.png)
+![Package Dependencies Diagram](docs/diagrams/package-dependencies.png)
 
-### Слои приложения
+### Application Layers
 
 1. **HTTP Layer** (`internal/http/`)
-   - Обработка HTTP запросов с использованием Gin framework
-   - Валидация входных данных
-   - Маршрутизация и middleware
+   - Handles HTTP requests using Gin framework
+   - Input validation
+   - Routing and middleware
 
 2. **Service Layer** (`internal/service/`)
-   - Реализация бизнес-логики
-   - Публикация событий в Kafka
-   - Координация между репозиторием и внешними сервисами
+   - Business logic implementation
+   - Event publishing to Kafka
+   - Coordination between repository and external services
 
 3. **Repository Layer** (`internal/repository/`)
-   - Работа с PostgreSQL через Bun ORM
-   - Инкапсуляция логики работы с БД
+   - PostgreSQL operations using Bun ORM
+   - Database logic encapsulation
 
 4. **Application Layer** (`internal/application/`)
-   - Инициализация компонентов
-   - Управление жизненным циклом приложения
-   - Настройка логирования
+   - Component initialization
+   - Application lifecycle management
+   - Logging configuration
 
-### Внешние зависимости
+### External Dependencies
 
-- **PostgreSQL** - основное хранилище данных
-- **Apache Kafka** - брокер сообщений для асинхронных событий
-- **Zookeeper** - координатор для Kafka
+- **PostgreSQL** - Primary data storage
+- **Apache Kafka** - Message broker for asynchronous events
+- **Zookeeper** - Kafka coordinator
 
 ### API Endpoints
 
-#### Публичные эндпоинты
-- `GET /api/v1/companies/:uuid` - получение информации о компании
+#### Public Endpoints
+- `GET /api/v1/companies/:uuid` - Get company information
 
-#### Защищенные эндпоинты (требуют JWT токен)
-- `POST /api/v1/secured/companies` - создание новой компании
-- `PATCH /api/v1/secured/companies/:uuid` - обновление компании
-- `DELETE /api/v1/secured/companies/:uuid` - удаление компании
+#### Secured Endpoints (require JWT token)
+- `POST /api/v1/secured/companies` - Create new company
+- `PATCH /api/v1/secured/companies/:uuid` - Update company
+- `DELETE /api/v1/secured/companies/:uuid` - Delete company
 
-### Модель данных
+### Data Model
 
 ```go
 type Company struct {
     ID              uuid.UUID
-    Name            string    // уникальное, max 15 символов
-    Description     string    // max 3000 символов
+    Name            string    // unique, max 15 characters
+    Description     string    // max 3000 characters
     EmployeesAmount int
     Registered      bool
     Type            CompanyType
@@ -167,7 +167,7 @@ type Company struct {
     UpdatedAt       time.Time
 }
 
-// CompanyType - типы компаний
+// CompanyType - company types
 type CompanyType string
 
 const (
@@ -178,184 +178,188 @@ const (
 )
 ```
 
-## Конфигурация
+## Configuration
 
-Приложение конфигурируется через переменные окружения. Все настройки загружаются через Viper.
+The application is configured through environment variables. All settings are loaded via Viper.
 
-### Переменные окружения
+### Environment Variables
 
-#### База данных
-- `DB_HOST` - хост PostgreSQL (по умолчанию: `localhost`)
-- `DB_PORT` - порт PostgreSQL (по умолчанию: `5432`)
-- `DB_USER` - пользователь БД (по умолчанию: `db`)
-- `DB_PASSWORD` - пароль БД (по умолчанию: `db`)
-- `DB_NAME` - имя БД (по умолчанию: `db`)
+#### Database
+- `DB_HOST` - PostgreSQL host (default: `localhost`)
+- `DB_PORT` - PostgreSQL port (default: `5432`)
+- `DB_USER` - Database user (default: `db`)
+- `DB_PASSWORD` - Database password (default: `db`)
+- `DB_NAME` - Database name (default: `db`)
 
 #### Kafka
-- `KAFKA_ADDR` - адрес Kafka брокера (по умолчанию: `localhost:9092`)
-- `KAFKA_TOPIC` - топик для событий (по умолчанию: `companies-mutations`)
+- `KAFKA_ADDR` - Kafka broker address (default: `localhost:9092`)
+- `KAFKA_TOPIC` - Event topic (default: `companies-mutations`)
 
-#### HTTP сервер
-- `HTTP_PORT` - порт HTTP сервера (по умолчанию: `8080`)
+#### HTTP Server
+- `HTTP_PORT` - HTTP server port (default: `8080`)
 
-#### Аутентификация
-- `JWT_KEY` - секретный ключ для JWT токенов
+#### Authentication
+- `JWT_KEY` - Secret key for JWT tokens
 
-#### Логирование
-- `LOG_LEVEL` - уровень логирования (debug, info, warn, error)
-- `LOG_ENCODING` - формат логов (json, console)
+#### Logging
+- `LOG_LEVEL` - Log level (debug, info, warn, error)
+- `LOG_ENCODING` - Log format (json, console)
 
-## Доступные команды
+## Available Commands
 
-### Сборка и запуск
+### Build and Run
 ```bash
-make build                # Сборка бинарного файла
-make run                  # Запуск собранного бинарника
-make run/local            # Полный локальный запуск с инфраструктурой
+make build                # Build binary
+make run                  # Run built binary
+make run/local            # Full local run with infrastructure
 ```
 
-### Тестирование
+### Testing
 ```bash
-make test                 # Запуск unit тестов
-make test/int             # Запуск unit и интеграционных тестов
-make test/int/docker-compose  # Полный цикл интеграционного тестирования
+make test                 # Run unit tests
+make test/int             # Run unit and integration tests
+make test/int/docker-compose  # Full integration test cycle
 ```
 
-### Качество кода
+### Code Quality
 ```bash
-make lint                 # Запуск golangci-lint
-make fmt                  # Форматирование кода
-make generate             # Генерация моков для тестов
+make lint                 # Run golangci-lint
+make fmt                  # Format code
+make generate             # Generate test mocks
 ```
 
-### Docker и инфраструктура
+### Docker and Infrastructure
 ```bash
-make up                   # Запуск PostgreSQL и Kafka
-make down                 # Остановка контейнеров
-make kafka/topic/create   # Создание Kafka топика
-make kafka/topic/consume  # Просмотр сообщений в топике
+make up                   # Start PostgreSQL and Kafka
+make down                 # Stop containers
+make kafka/topic/create   # Create Kafka topic
+make kafka/topic/consume  # View topic messages
 ```
 
-### Миграции БД
+### Database Migrations
 ```bash
-make migrate/up           # Применение миграций
-make migrate/down         # Откат последней миграции
+make migrate/up           # Apply migrations
+make migrate/down         # Rollback last migration
 ```
 
-### Тестирование API
+### API Testing
 ```bash
-make company/livecycle    # Полный CRUD цикл через curl
-make company/create       # Создание компании
-make company/get          # Получение компании
-make company/patch        # Обновление компании
-make company/delete       # Удаление компании
+make company/lifecycle    # Full CRUD cycle via curl
+make company/create       # Create company
+make company/get          # Get company
+make company/patch        # Update company
+make company/delete       # Delete company
 ```
 
-### Диаграммы
+### Diagrams
 ```bash
-make diagrams             # Генерация диаграмм из DOT файлов
+make diagrams             # Generate diagrams from DOT files
 ```
 
-## Особенности разработки
+## Development
 
-### Соглашения по коду
-- Используется стандартное форматирование Go (gofmt)
-- Линтер: golangci-lint с настройками по умолчанию
-- Моки генерируются с помощью gomock
+### Code Conventions
+- Standard Go formatting (gofmt)
+- Linter: golangci-lint with default settings
+- Mocks generated using gomock
 
-### Тестирование
-- Unit тесты находятся рядом с кодом (`*_test.go`)
-- Интеграционные тесты в `internal/tests/`
-- Для запуска интеграционных тестов используется тег `integration`
-- Тесты требуют запущенные PostgreSQL и Kafka
+### Testing
+- Unit tests are located alongside code (`*_test.go`)
+- Integration tests in `internal/tests/`
+- Integration tests use the `integration` build tag
+- Tests require running PostgreSQL and Kafka
 
-### События Kafka
-Все мутирующие операции (CREATE, UPDATE, DELETE) публикуют события в топик `companies-mutations`:
+### Kafka Events
+All mutating operations (CREATE, UPDATE, DELETE) publish events to the `companies-mutations` topic:
 
 ```json
 {
   "type": "CREATE|UPDATE|DELETE",
   "companyId": "uuid",
   "data": {
-    // данные компании
+    // company data
   },
   "timestamp": "2024-01-01T00:00:00Z"
 }
 ```
 
-### JWT аутентификация
-- Алгоритм: HS256
-- Токен передается в заголовке: `Authorization: Bearer <token>`
-- Защищенные эндпоинты требуют валидный токен
+### JWT Authentication
+- Algorithm: HS256
+- Token passed in header: `Authorization: Bearer <token>`
+- Secured endpoints require valid token
 
-## Разработка
+## Development
 
-### Добавление новой функциональности
+### Adding New Features
 
-1. Определите модель в `internal/models/`
-2. Добавьте методы репозитория в `internal/repository/`
-3. Реализуйте бизнес-логику в `internal/service/`
-4. Создайте HTTP handlers в `internal/http/`
-5. Напишите тесты для каждого слоя
-6. Обновите документацию
+1. Define models in `internal/models/`
+2. Add repository methods in `internal/repository/`
+3. Implement business logic in `internal/service/`
+4. Create HTTP handlers in `internal/http/`
+5. Write tests for each layer
+6. Update documentation
 
-### Генерация моков для тестов
+### Generating Test Mocks
 
 ```bash
 make generate
 ```
 
-Это создаст моки для интерфейсов, помеченных комментарием:
+This will create mocks for interfaces marked with comment:
 ```go
 //go:generate mockgen -source=file.go -destination=mocks/file_mock.go
 ```
 
-## Развертывание
+## Deployment
 
 ### Docker
 
-Для сборки Docker образа:
+To build Docker image:
 ```bash
 docker build -t companies:latest .
 ```
 
 ### Docker Compose
 
-Полное развертывание с инфраструктурой:
+Full deployment with infrastructure:
 ```bash
 docker-compose up -d
 ```
 
-## Мониторинг и логи
+## Monitoring and Logs
 
-Приложение использует структурированное логирование через Zap. Логи выводятся в stdout в формате JSON (production) или console (development).
+The application uses structured logging via Zap. Logs are output to stdout in JSON format (production) or console format (development).
 
-Просмотр логов:
+View logs:
 ```bash
-# Логи приложения
+# Application logs
 docker-compose logs -f companies
 
-# Логи всех сервисов
+# All service logs
 docker-compose logs -f
 ```
 
 ## Troubleshooting
 
-### Проблемы с подключением к БД
-1. Проверьте, что PostgreSQL запущен: `docker-compose ps`
-2. Проверьте переменные окружения
-3. Убедитесь, что миграции применены: `make migrate/up`
+### Database Connection Issues
+1. Check PostgreSQL is running: `docker-compose ps`
+2. Verify environment variables
+3. Ensure migrations are applied: `make migrate/up`
 
-### Проблемы с Kafka
-1. Проверьте, что Kafka и Zookeeper запущены
-2. Убедитесь, что топик создан: `make kafka/topic/create`
-3. Проверьте логи Kafka: `docker-compose logs kafka`
+### Kafka Issues
+1. Check Kafka and Zookeeper are running
+2. Ensure topic is created: `make kafka/topic/create`
+3. Check Kafka logs: `docker-compose logs kafka`
 
-### Проблемы с тестами
-1. Для интеграционных тестов требуется запущенная инфраструктура
-2. Используйте `make test/int/docker-compose` для полного цикла
-3. Проверьте, что порты 5432 (PostgreSQL) и 9092 (Kafka) свободны
+### Test Issues
+1. Integration tests require running infrastructure
+2. Use `make test/int/docker-compose` for full cycle
+3. Check ports 5432 (PostgreSQL) and 9092 (Kafka) are available
 
-## Лицензия
+## Language Support
 
-Этот проект распространяется под лицензией MIT. См. файл [LICENSE](LICENSE) для подробностей.
+For Russian documentation, see [README_ru.md](README_ru.md).
+
+## License
+
+This project is distributed under the MIT License. See [LICENSE](LICENSE) file for details.
