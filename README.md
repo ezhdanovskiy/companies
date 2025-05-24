@@ -1,5 +1,7 @@
 # Companies Microservice
 
+[![codecov](https://codecov.io/gh/ezhdanovskiy/companies/branch/master/graph/badge.svg)](https://codecov.io/gh/ezhdanovskiy/companies)
+
 ## Overview
 
 Companies is a microservice for managing company information, built with Go using a layered architecture. The service provides a REST API for CRUD operations on companies, publishes change events to Apache Kafka, and supports JWT authentication for secured endpoints.
