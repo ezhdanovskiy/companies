@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/ezhdanovskiy/companies/internal/middlewares"
@@ -17,6 +18,7 @@ type Server struct {
 	httpPort   int
 	httpServer *http.Server
 	svc        Service
+	mu         sync.Mutex
 }
 
 func NewServer(logger *zap.SugaredLogger, httpPort int, svc Service) *Server {
@@ -32,11 +34,13 @@ func (s *Server) Run() error {
 	apiV1 := router.Group("/api/v1")
 	s.SetAPIV1Routes(apiV1)
 
+	s.mu.Lock()
 	s.httpServer = &http.Server{
 		Addr:              fmt.Sprintf(":%d", s.httpPort),
 		Handler:           router,
 		ReadHeaderTimeout: 3 * time.Second,
 	}
+	s.mu.Unlock()
 
 	err := s.httpServer.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
@@ -55,10 +59,16 @@ func (s *Server) SetAPIV1Routes(rg *gin.RouterGroup) {
 }
 
 func (s *Server) Shutdown() {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := s.httpServer.Shutdown(ctx); err != nil {
-		s.log.Errorf("http server shutdown: %s", err)
+	s.mu.Lock()
+	httpServer := s.httpServer
+	s.mu.Unlock()
+
+	if httpServer != nil {
+		if err := httpServer.Shutdown(ctx); err != nil {
+			s.log.Errorf("http server shutdown: %s", err)
+		}
 	}
 }

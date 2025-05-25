@@ -45,8 +45,8 @@ jobs:
 
     - name: Run unit tests with coverage
       run: |
-        # Run unit tests, excluding integration tests directory
-        go test -v -race -coverprofile=coverage.out -covermode=atomic $(go list ./... | grep -v /tests)
+        # Run unit tests with coverage
+        go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
       env:
         DB_HOST: localhost
         DB_PORT: 5432
